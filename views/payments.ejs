@@ -1,0 +1,202 @@
+<div class="container-fluid py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h3 class="mb-0">Payments Management</h3>
+  </div>
+
+  <ul class="nav nav-tabs" id="paymentsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests" type="button" role="tab">Payment Requests</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab">Payment Settings</button>
+    </li>
+  </ul>
+
+  <div class="tab-content border-start border-end border-bottom p-3 bg-white" id="paymentsTabsContent">
+    <!-- Requests Tab -->
+    <div class="tab-pane fade show active" id="requests" role="tabpanel" aria-labelledby="requests-tab">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <div class="d-flex gap-2">
+          <select id="filterStatus" class="form-select form-select-sm" style="width: 200px;">
+            <option value="">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <button id="refreshBtn" class="btn btn-sm btn-outline-primary">Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm align-middle" id="requestsTable">
+          <thead class="table-light">
+            <tr>
+              <th>Created</th>
+              <th>User</th>
+              <th>Product</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Txn ID</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div class="tab-pane fade" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+      <form id="settingsForm" class="row g-3" enctype="multipart/form-data">
+        <div class="col-12 col-md-4">
+          <label class="form-label">QR Code Image</label>
+          <div class="border rounded p-2 text-center">
+            <img id="qrPreview" src="<%= (settings && settings.qrImageUrl) ? settings.qrImageUrl : '' %>" alt="QR" style="max-width:100%;max-height:220px;<%= (settings && settings.qrImageUrl) ? '' : 'display:none;' %>">
+          </div>
+          <input type="file" class="form-control mt-2" name="qr" accept="image/*">
+        </div>
+        <div class="col-12 col-md-8">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Bank Name</label>
+              <input type="text" class="form-control" name="bankName" value="<%= settings?.bankName || '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Account Name</label>
+              <input type="text" class="form-control" name="accountName" value="<%= settings?.accountName || '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Account Number</label>
+              <input type="text" class="form-control" name="accountNumber" value="<%= settings?.accountNumber || '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">IBAN</label>
+              <input type="text" class="form-control" name="iban" value="<%= settings?.iban || '' %>">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">SWIFT</label>
+              <input type="text" class="form-control" name="swift" value="<%= settings?.swift || '' %>">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Instructions</label>
+              <textarea class="form-control" rows="3" name="instructions"><%= settings?.instructions || '' %></textarea>
+            </div>
+          </div>
+          <div class="mt-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Save Settings</button>
+            <button type="button" id="reloadSettings" class="btn btn-outline-secondary">Reload</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    const tableBody = document.querySelector('#requestsTable tbody');
+    const filterStatus = document.getElementById('filterStatus');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const settingsForm = document.getElementById('settingsForm');
+    const reloadSettingsBtn = document.getElementById('reloadSettings');
+    const qrInput = settingsForm.querySelector('input[name="qr"]');
+    const qrPreview = document.getElementById('qrPreview');
+
+    async function loadRequests(){
+      const qs = filterStatus.value ? ('?status=' + encodeURIComponent(filterStatus.value)) : '';
+      const resp = await fetch('/api/payment/requests' + qs);
+      if (!resp.ok) return;
+      const items = await resp.json();
+      tableBody.innerHTML = '';
+      items.forEach(function(r){
+        const tr = document.createElement('tr');
+        const created = new Date(r.createdAt).toLocaleString();
+        const user = (r.userName || '-') + '<br><small class="text-muted">' + (r.userEmail || '-') + '</small>';
+        const product = r.tourPackageId ? ('Package #' + r.tourPackageId) : (r.hikingId ? ('Hiking #' + r.hikingId) : '-');
+        const amount = `$${(r.amount || 0).toLocaleString()} ${r.currency || ''}`;
+        const statusBadge = r.status === 'approved' ? 'success' : (r.status === 'rejected' ? 'danger' : 'secondary');
+        tr.innerHTML = `
+          <td>${created}</td>
+          <td>${user}</td>
+          <td>${product}</td>
+          <td>${amount}</td>
+          <td>${r.paymentMethod || '-'}</td>
+          <td>${r.transactionId || '-'}</td>
+          <td><span class="badge bg-${statusBadge}">${r.status}</span></td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-success" data-action="approve" data-id="${r._id}">Approve</button>
+              <button class="btn btn-outline-danger" data-action="reject" data-id="${r._id}">Reject</button>
+            </div>
+          </td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    async function updateRequest(id, status){
+      const resp = await fetch('/api/payment/requests/' + id, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      if (resp.ok) { await loadRequests(); }
+    }
+
+    tableBody.addEventListener('click', function(e){
+      const btn = e.target.closest('button[data-action]');
+      if (!btn) return;
+      const id = btn.getAttribute('data-id');
+      const action = btn.getAttribute('data-action');
+      if (action === 'approve') updateRequest(id, 'approved');
+      if (action === 'reject') updateRequest(id, 'rejected');
+    });
+
+    filterStatus.addEventListener('change', loadRequests);
+    refreshBtn.addEventListener('click', loadRequests);
+
+    // Settings load/save
+    async function loadSettings(){
+      const resp = await fetch('/api/payment/settings');
+      if (!resp.ok) return;
+      const s = await resp.json();
+      settingsForm.bankName.value = s.bankName || '';
+      settingsForm.accountName.value = s.accountName || '';
+      settingsForm.accountNumber.value = s.accountNumber || '';
+      settingsForm.iban.value = s.iban || '';
+      settingsForm.swift.value = s.swift || '';
+      settingsForm.instructions.value = s.instructions || '';
+      if (s.qrImageUrl) {
+        qrPreview.src = s.qrImageUrl;
+        qrPreview.style.display = 'block';
+      }
+    }
+
+    settingsForm.addEventListener('submit', async function(e){
+      e.preventDefault();
+      const formData = new FormData(settingsForm);
+      const resp = await fetch('/api/payment/settings', { method: 'PUT', body: formData });
+      if (resp.ok) {
+        const s = await resp.json();
+        if (s.qrImageUrl) { qrPreview.src = s.qrImageUrl; qrPreview.style.display = 'block'; }
+      }
+    });
+
+    qrInput.addEventListener('change', function(){
+      const f = this.files && this.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = function(e){ qrPreview.src = e.target.result; qrPreview.style.display = 'block'; };
+      reader.readAsDataURL(f);
+    });
+
+    reloadSettingsBtn.addEventListener('click', loadSettings);
+
+    // init
+    loadRequests();
+    loadSettings();
+  });
+</script>
+
+

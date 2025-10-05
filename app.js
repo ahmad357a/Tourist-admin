@@ -31,7 +31,9 @@ const {
     TouristGallery,
     TouristTourPackage,
     TouristHiking, 
-    TouristBooking 
+    TouristBooking,
+    PaymentSetting,
+    PaymentRequest
 } = require('./db');
 
 // Increase body parser limits for image uploads
@@ -695,6 +697,114 @@ app.get('/settings', ensureAuthenticated, function(req, res) {
         user: req.user,
         layout: 'layout'
     });
+});
+
+// Payments Management route (tabs: requests, settings)
+app.get('/payments', ensureAuthenticated, async function(req, res) {
+    try {
+        const settings = await PaymentSetting.findOne();
+        res.render('payments', {
+            title: 'Payments Management',
+            pageTitle: 'Payments Management',
+            currentPage: 'payments',
+            user: req.user,
+            layout: 'layout',
+            settings: settings || {}
+        });
+    } catch (e) {
+        res.render('payments', {
+            title: 'Payments Management',
+            pageTitle: 'Payments Management',
+            currentPage: 'payments',
+            user: req.user,
+            layout: 'layout',
+            settings: {}
+        });
+    }
+});
+
+// Payments API - admin protected
+app.get('/api/payment/settings', ensureAuthenticated, async function(req, res){
+    try {
+        const settings = await PaymentSetting.findOne();
+        res.json(settings || {});
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch settings' });
+    }
+});
+
+app.put('/api/payment/settings', ensureAuthenticated, upload.single('qr'), async function(req, res){
+    try {
+        const update = {
+            bankName: req.body.bankName || '',
+            accountName: req.body.accountName || '',
+            accountNumber: req.body.accountNumber || '',
+            iban: req.body.iban || '',
+            swift: req.body.swift || '',
+            instructions: req.body.instructions || ''
+        };
+        if (req.file) {
+            update.qrImageUrl = `/uploads/${req.file.filename}`;
+        } else if (typeof req.body.qrImageUrl === 'string') {
+            update.qrImageUrl = req.body.qrImageUrl;
+        }
+        const settings = await PaymentSetting.findOneAndUpdate({}, update, { new: true, upsert: true });
+        res.json(settings);
+    } catch (e) {
+        console.error('Update settings failed:', e);
+        res.status(500).json({ error: 'Failed to update settings' });
+    }
+});
+
+app.get('/api/payment/requests', ensureAuthenticated, async function(req, res){
+    try {
+        const status = req.query.status;
+        const filter = status ? { status } : {};
+        const requests = await PaymentRequest.find(filter).sort({ createdAt: -1 });
+        res.json(requests);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch requests' });
+    }
+});
+
+app.patch('/api/payment/requests/:id', ensureAuthenticated, async function(req, res){
+    try {
+        const { status, notes } = req.body;
+        const allowed = ['pending', 'approved', 'rejected'];
+        if (status && !allowed.includes(status)) {
+            return res.status(400).json({ error: 'Invalid status' });
+        }
+        const update = {};
+        if (status) update.status = status;
+        if (typeof notes === 'string') update.notes = notes;
+        const updated = await PaymentRequest.findByIdAndUpdate(req.params.id, update, { new: true });
+        if (!updated) return res.status(404).json({ error: 'Not found' });
+        res.json(updated);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to update request' });
+    }
+});
+
+// Public endpoint for website to fetch settings (CORS open)
+app.get('/public/payment-settings', async function(req, res){
+    try {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        const settings = await PaymentSetting.findOne();
+        const base = `${req.protocol}://${req.get('host')}`;
+        const qr = settings?.qrImageUrl || '';
+        const absoluteQr = qr ? (qr.startsWith('http') ? qr : base + (qr.startsWith('/') ? '' : '/') + qr) : '';
+        res.json({
+            qrImageUrl: absoluteQr,
+            bankName: settings?.bankName || '',
+            accountName: settings?.accountName || '',
+            accountNumber: settings?.accountNumber || '',
+            iban: settings?.iban || '',
+            swift: settings?.swift || '',
+            instructions: settings?.instructions || ''
+        });
+    } catch (e) {
+        res.status(200).json({});
+    }
 });
 
 // Gallery API Routes

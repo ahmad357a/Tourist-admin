@@ -326,6 +326,45 @@ hikingSchema.pre('save', function(next) {
     next();
 });
 
+// Payment Settings (admin-configured QR and bank details)
+const paymentSettingSchema = new mongoose.Schema({
+    qrImageUrl: { type: String, default: '' },
+    bankName: { type: String, default: '' },
+    accountName: { type: String, default: '' },
+    accountNumber: { type: String, default: '' },
+    iban: { type: String, default: '' },
+    swift: { type: String, default: '' },
+    instructions: { type: String, default: '' },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+paymentSettingSchema.pre('save', function(next){
+    this.updatedAt = Date.now();
+    next();
+});
+
+// Payment Requests (submitted from website)
+const paymentRequestSchema = new mongoose.Schema({
+    userEmail: { type: String, required: true, trim: true },
+    userName: { type: String, default: '' },
+    tourPackageId: { type: mongoose.Schema.Types.ObjectId, ref: 'TourPackage' },
+    hikingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hiking' },
+    amount: { type: Number, required: true, min: 0 },
+    currency: { type: String, default: 'USD' },
+    paymentMethod: { type: String, default: 'bank_transfer' },
+    transactionId: { type: String, default: '' },
+    proofImageUrl: { type: String, default: '' },
+    notes: { type: String, default: '' },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now }
+});
+
+paymentRequestSchema.pre('save', function(next){
+    this.updatedAt = Date.now();
+    next();
+});
+
 // Apply plugins
 adminSchema.plugin(passportLocalMongoose);
 adminSchema.plugin(findOrCreate);
@@ -511,6 +550,10 @@ const User = mongoose.model('User', userSchema);
 const Order = mongoose.model('Order', orderSchema);
 const Review = mongoose.model('Review', reviewSchema);
 
+// Payments models
+const PaymentSetting = mongoose.model('PaymentSetting', paymentSettingSchema);
+const PaymentRequest = mongoose.model('PaymentRequest', paymentRequestSchema);
+
 // Create aliases for Tour Package, Gallery, Hiking, andBooking models to match Tourist Website naming
 const TouristGallery = Gallery;
 const TouristTourPackage = TourPackage;
@@ -531,5 +574,7 @@ module.exports = {
     TouristGallery,
     TouristTourPackage,
     TouristHiking,
-    TouristBooking
+    TouristBooking,
+    PaymentSetting,
+    PaymentRequest
 };
