@@ -45,6 +45,14 @@ app.set('layout', 'layout');
 app.use(expressLayouts);
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Explicitly serve uploads with cache headers for production
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads'), {
+    setHeaders: (res) => {
+        // cache images for 7 days
+        res.setHeader('Cache-Control', 'public, max-age=604800, immutable');
+    }
+}));
+
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -227,15 +235,15 @@ app.get('/', ensureAuthenticated, async function(req, res) {
                 setTimeout(() => reject(new Error('Revenue aggregation timeout')), 15000)
             );
             const aggregationPromise = TouristBooking.aggregate([
-                { $match: { 'paymentInfo.paymentStatus': 'completed' } },
-                {
-                    $group: {
-                        _id: null,
-                        totalRevenue: { $sum: '$paymentInfo.amount' },
-                        count: { $sum: 1 }
-                    }
+            { $match: { 'paymentInfo.paymentStatus': 'completed' } },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: '$paymentInfo.amount' },
+                    count: { $sum: 1 }
                 }
-            ]);
+            }
+        ]);
             revenueData = await Promise.race([aggregationPromise, timeoutPromise]);
         } catch (error) {
             console.error('Revenue aggregation error:', error.message);
@@ -254,40 +262,40 @@ app.get('/', ensureAuthenticated, async function(req, res) {
             );
             
             const currentMonthPromise = TouristBooking.aggregate([
-                { 
-                    $match: { 
-                        'paymentInfo.paymentStatus': 'completed',
-                        'createdAt': { $gte: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1) }
-                    } 
-                },
-                {
-                    $group: {
-                        _id: null,
-                        totalRevenue: { $sum: '$paymentInfo.amount' },
-                        count: { $sum: 1 }
-                    }
+            { 
+                $match: { 
+                    'paymentInfo.paymentStatus': 'completed',
+                    'createdAt': { $gte: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1) }
+                } 
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: '$paymentInfo.amount' },
+                    count: { $sum: 1 }
                 }
-            ]);
-            
+            }
+        ]);
+        
             const lastMonthPromise = TouristBooking.aggregate([
-                { 
-                    $match: { 
-                        'paymentInfo.paymentStatus': 'completed',
-                        'createdAt': { 
-                            $gte: new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
-                            $lt: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
-                        }
-                    } 
-                },
-                {
-                    $group: {
-                        _id: null,
-                        totalRevenue: { $sum: '$paymentInfo.amount' },
-                        count: { $sum: 1 }
+            { 
+                $match: { 
+                    'paymentInfo.paymentStatus': 'completed',
+                    'createdAt': { 
+                        $gte: new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1),
+                        $lt: new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)
                     }
+                } 
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalRevenue: { $sum: '$paymentInfo.amount' },
+                    count: { $sum: 1 }
                 }
-            ]);
-            
+            }
+        ]);
+        
             const results = await Promise.race([
                 Promise.all([currentMonthPromise, lastMonthPromise]),
                 timeoutPromise
@@ -343,8 +351,8 @@ app.get('/', ensureAuthenticated, async function(req, res) {
                 setTimeout(() => reject(new Error('Recent bookings timeout')), 8000)
             );
             const bookingsPromise = TouristBooking.find({ 'paymentInfo.paymentStatus': 'completed' })
-                .sort({ createdAt: -1 })
-                .limit(5);
+            .sort({ createdAt: -1 })
+            .limit(5);
             recentBookings = await Promise.race([bookingsPromise, timeoutPromise]);
         } catch (error) {
             console.error('Recent bookings query error:', error.message);
@@ -418,14 +426,14 @@ app.get('/', ensureAuthenticated, async function(req, res) {
                 setTimeout(() => reject(new Error('Review aggregation timeout')), 10000)
             );
             const reviewPromise = Review.aggregate([
-                {
-                    $group: {
-                        _id: null,
-                        avgRating: { $avg: '$rating' },
-                        totalReviews: { $sum: 1 }
-                    }
+            {
+                $group: {
+                    _id: null,
+                    avgRating: { $avg: '$rating' },
+                    totalReviews: { $sum: 1 }
                 }
-            ]);
+            }
+        ]);
             avgRatingData = await Promise.race([reviewPromise, timeoutPromise]);
         } catch (error) {
             console.error('Review aggregation error:', error.message);
@@ -1124,6 +1132,6 @@ app.get('/logout', function(req, res, next) {
 });
 
 
-app.listen(process.env.PORT || 3000, () => {
+app.listen(process.env.PORT || 5000, () => {
     console.log(`Server is running on port ${process.env.PORT || 3000}`);
 });
