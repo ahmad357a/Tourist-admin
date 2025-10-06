@@ -130,6 +130,37 @@ body {
 
 .sidebar-nav {
   padding: 1.5rem 0;
+  height: calc(100vh - 120px); /* Subtract header height */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Sidebar footer positioning */
+.sidebar-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--gray-50);
+  border-top: 1px solid var(--gray-200);
 }
 
 .nav-item {
@@ -649,4 +680,214 @@ body {
 
 .rounded-strong {
   border-radius: var(--radius-lg);
+}
+
+/* Payment table wrapper */
+.payment-table-wrapper {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+/* Table container with horizontal scrolling */
+.table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: auto; /* Enable horizontal scrolling */
+  position: relative;
+  width: 100%;
+}
+
+/* Custom scrollbar for table container */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Hide default horizontal scrollbar and use custom one */
+.table-container {
+  scrollbar-width: thin;
+}
+
+.table-container::-webkit-scrollbar:horizontal {
+  height: 0px; /* Hide default horizontal scrollbar */
+}
+
+/* Mobile container */
+#mobileRequestsContainer {
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+#mobileRequestsContainer::-webkit-scrollbar {
+  width: 8px;
+}
+
+#mobileRequestsContainer::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+#mobileRequestsContainer::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 4px;
+}
+
+#mobileRequestsContainer::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* Custom horizontal scrollbar */
+.horizontal-scrollbar {
+  height: 20px;
+  background: var(--gray-100);
+  border-top: 1px solid var(--gray-200);
+  position: relative;
+  cursor: pointer;
+}
+
+.scrollbar-track {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: var(--gray-100);
+}
+
+.scrollbar-thumb {
+  height: 16px;
+  background: var(--gray-400);
+  border-radius: 8px;
+  position: absolute;
+  top: 2px;
+  left: 0;
+  cursor: grab;
+  transition: background-color 0.2s ease;
+  min-width: 30px;
+}
+
+.scrollbar-thumb:hover {
+  background: var(--gray-500);
+}
+
+.scrollbar-thumb:active {
+  cursor: grabbing;
+  background: var(--primary);
+}
+
+/* Ensure table headers stay visible when scrolling */
+.table-container .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--gray-50);
+  border-bottom: 2px solid var(--gray-200);
+  white-space: nowrap;
+  min-width: 120px;
+}
+
+/* Payment table specific styling - Simplified */
+#requestsTable {
+  min-width: 820px; /* Adjusted minimum width for simplified table */
+  width: 100%; /* Use full available width */
+  table-layout: fixed; /* Fixed layout for consistent column widths */
+}
+
+#requestsTable th,
+#requestsTable td {
+  white-space: nowrap;
+  padding: 0.5rem 0.75rem; /* Optimized padding */
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Specific column widths for simplified layout */
+#requestsTable th:nth-child(1), /* Created */
+#requestsTable td:nth-child(1) {
+  width: 140px;
+  min-width: 140px;
+}
+
+#requestsTable th:nth-child(2), /* Name */
+#requestsTable td:nth-child(2) {
+  width: 150px;
+  min-width: 150px;
+}
+
+#requestsTable th:nth-child(3), /* Amount */
+#requestsTable td:nth-child(3) {
+  width: 120px;
+  min-width: 120px;
+}
+
+#requestsTable th:nth-child(4), /* Package */
+#requestsTable td:nth-child(4) {
+  width: 120px;
+  min-width: 120px;
+}
+
+#requestsTable th:nth-child(5), /* Screenshot */
+#requestsTable td:nth-child(5) {
+  width: 120px;
+  min-width: 120px;
+  text-align: center;
+}
+
+#requestsTable th:nth-child(6), /* Actions */
+#requestsTable td:nth-child(6) {
+  width: 170px;
+  min-width: 170px;
+}
+
+/* Scroll indicator styling */
+.scroll-indicator {
+  text-align: center;
+  padding: 0.5rem;
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  border: 1px solid var(--gray-200);
+  margin-bottom: 0.5rem;
+}
+
+.scroll-indicator i {
+  color: var(--primary);
+}
+
+/* Responsive adjustments for simplified table */
+@media (max-width: 1200px) {
+  #requestsTable {
+    min-width: 770px; /* Further reduced for smaller screens */
+  }
+  
+  .table-container {
+    max-height: 60vh; /* Reduce height on smaller screens */
+  }
+}
+
+@media (max-width: 992px) {
+  #requestsTable {
+    min-width: 720px; /* Minimum width for tablet screens */
+  }
+  
+  #requestsTable th,
+  #requestsTable td {
+    padding: 0.4rem 0.5rem; /* Smaller padding on mobile */
+    font-size: 0.9rem;
+  }
 }
