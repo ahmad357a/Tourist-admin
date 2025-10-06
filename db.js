@@ -18,7 +18,6 @@ const adminSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    googleId: String,
     role: {
         type: String,
         default: 'admin'
@@ -49,7 +48,6 @@ const subAdminSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    googleId: String,
     role: {
         type: String,
         default: 'subadmin'
@@ -345,10 +343,12 @@ paymentSettingSchema.pre('save', function(next){
 
 // Payment Requests (submitted from website)
 const paymentRequestSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     userEmail: { type: String, required: true, trim: true },
     userName: { type: String, default: '' },
     tourPackageId: { type: mongoose.Schema.Types.ObjectId, ref: 'TourPackage' },
     hikingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hiking' },
+    bookingId: { type: mongoose.Schema.Types.ObjectId, ref: 'Booking' }, // Link to booking
     amount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: 'USD' },
     paymentMethod: { type: String, default: 'bank_transfer' },
@@ -449,7 +449,6 @@ const userSchema = new mongoose.Schema({
     },
     phone: String,
     nationality: String,
-    googleId: String,
     active: {
         type: Boolean,
         default: true

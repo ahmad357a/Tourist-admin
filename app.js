@@ -15,7 +15,6 @@ const crypto = require('crypto');
 const expressLayouts = require('express-ejs-layouts');
 
 // mongodb+srv://mesum357:pDliM118811@cluster0.h3knh.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 // Import models from db.js
 const { 
@@ -175,45 +174,6 @@ passport.deserializeUser(async function(obj, done) {
     }
 });
 
-// Google Strategy
-passport.use(new GoogleStrategy({
-    clientID: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: process.env.NODE_ENV === 'production' 
-        ? `${process.env.VERCEL_URL}/auth/google/homepage`
-        : "http://localhost:3000/auth/google/homepage",
-    passReqToCallback: true
-},
-async function(req, accessToken, refreshToken, profile, done) {
-    try {
-        // First check if user exists with this Google ID
-        let user = await Admin.findOne({ googleId: profile.id });
-        
-        if (!user) {
-            // If no user with Google ID, check if user exists with this email
-            user = await Admin.findOne({ email: profile.emails[0].value });
-            
-            if (user) {
-                // User exists with email but no Google ID, update with Google ID
-                user.googleId = profile.id;
-                await user.save();
-            } else {
-                // Create new user
-                user = await Admin.create({
-                    googleId: profile.id,
-                    username: profile.emails[0].value,
-                    fullName: profile.displayName || profile.emails[0].value,
-                    email: profile.emails[0].value
-                });
-            }
-        }
-        
-        return done(null, user);
-    } catch (err) {
-        console.error('Google OAuth error:', err);
-        return done(err, null);
-    }
-}));
 
 // Set up layout
 app.set('view engine', 'ejs');
@@ -623,15 +583,6 @@ app.post("/login", function(req, res, next) {
     });
 });
 
-app.get('/auth/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-app.get('/auth/google/homepage',
-    passport.authenticate('google', { failureRedirect: '/login?error=Google authentication failed' }),
-    function(req, res) {
-        // Successful Google authentication
-        res.redirect('/?success=Welcome! You have been successfully logged in with Google.');
-    });
 
 // Tour Packages route - using modern layout
 app.get('/tour', ensureAuthenticated, function(req, res) {
@@ -781,8 +732,94 @@ app.patch('/api/payment/requests/:id', ensureAuthenticated, async function(req, 
         if (typeof notes === 'string') update.notes = notes;
         const updated = await PaymentRequest.findByIdAndUpdate(req.params.id, update, { new: true });
         if (!updated) return res.status(404).json({ error: 'Not found' });
+        
+        // Update linked booking status if payment request has a bookingId
+        if (updated.bookingId && status) {
+            let bookingStatus = 'pending';
+            let paymentStatus = 'pending';
+            
+            if (status === 'approved') {
+                bookingStatus = 'confirmed';
+                paymentStatus = 'completed';
+            } else if (status === 'rejected') {
+                bookingStatus = 'cancelled';
+                paymentStatus = 'failed';
+            }
+            
+            // Update the booking
+            const booking = await TouristBooking.findByIdAndUpdate(updated.bookingId, {
+                bookingStatus: bookingStatus,
+                'paymentInfo.paymentStatus': paymentStatus
+            }, { new: true });
+            
+            console.log(`Updated booking ${updated.bookingId} status to ${bookingStatus} based on payment request ${status}`);
+            
+            // Send email notification to user about booking status change
+            if (booking && booking.customerInfo && booking.customerInfo.email) {
+                try {
+                    const nodemailer = require('nodemailer');
+                    
+                    // Email configuration (you may need to adjust these settings)
+                    const transporter = nodemailer.createTransporter({
+                        service: 'gmail',
+                        auth: {
+                            user: process.env.GMAIL_USER,
+                            pass: process.env.GMAIL_APP_PASSWORD
+                        }
+                    });
+                    
+                    let emailSubject, emailBody;
+                    
+                    if (status === 'approved') {
+                        emailSubject = `Booking Confirmed - ${booking.bookingNumber}`;
+                        emailBody = `
+                            <h2>🎉 Your Booking Has Been Confirmed!</h2>
+                            <p>Dear ${booking.customerInfo.firstName} ${booking.customerInfo.lastName},</p>
+                            <p>Great news! Your payment has been approved and your booking is now confirmed.</p>
+                            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <h3>Booking Details:</h3>
+                                <p><strong>Booking Number:</strong> ${booking.bookingNumber}</p>
+                                <p><strong>Amount Paid:</strong> $${updated.amount}</p>
+                                <p><strong>Status:</strong> Confirmed</p>
+                            </div>
+                            <p>You will receive further details about your tour shortly. Thank you for choosing our services!</p>
+                            <p>Best regards,<br>Tourist Website Team</p>
+                        `;
+                    } else if (status === 'rejected') {
+                        emailSubject = `Booking Cancelled - ${booking.bookingNumber}`;
+                        emailBody = `
+                            <h2>Booking Cancelled</h2>
+                            <p>Dear ${booking.customerInfo.firstName} ${booking.customerInfo.lastName},</p>
+                            <p>We regret to inform you that your payment could not be approved and your booking has been cancelled.</p>
+                            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                                <h3>Booking Details:</h3>
+                                <p><strong>Booking Number:</strong> ${booking.bookingNumber}</p>
+                                <p><strong>Amount:</strong> $${updated.amount}</p>
+                                <p><strong>Status:</strong> Cancelled</p>
+                            </div>
+                            <p>Please contact our support team for assistance or submit a new payment if you wish to proceed with your booking.</p>
+                            <p>Best regards,<br>Tourist Website Team</p>
+                        `;
+                    }
+                    
+                    await transporter.sendMail({
+                        from: process.env.GMAIL_USER,
+                        to: booking.customerInfo.email,
+                        subject: emailSubject,
+                        html: emailBody
+                    });
+                    
+                    console.log(`Email notification sent to ${booking.customerInfo.email} for booking ${booking.bookingNumber}`);
+                } catch (emailError) {
+                    console.error('Failed to send email notification:', emailError);
+                    // Don't fail the request if email fails
+                }
+            }
+        }
+        
         res.json(updated);
     } catch (e) {
+        console.error('Error updating payment request:', e);
         res.status(500).json({ error: 'Failed to update request' });
     }
 });

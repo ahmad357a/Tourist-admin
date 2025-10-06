@@ -3,6 +3,13 @@
     <h3 class="mb-0">Payments Management</h3>
   </div>
 
+  <!-- Success Message Container -->
+  <div id="successMessage" class="alert alert-success alert-dismissible fade" role="alert" style="display: none;">
+    <i class="bi bi-check-circle me-2"></i>
+    <span id="successMessageText"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+
   <ul class="nav nav-tabs" id="paymentsTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="requests-tab" data-bs-toggle="tab" data-bs-target="#requests" type="button" role="tab">Payment Requests</button>
@@ -172,15 +179,23 @@
         const amount = `$${(r.amount || 0).toLocaleString()} ${r.currency || ''}`;
         const packageName = r.tourPackageId ? ('Package #' + r.tourPackageId) : (r.hikingId ? ('Hiking #' + r.hikingId) : '-');
         const statusBadge = r.status === 'approved' ? 'success' : (r.status === 'rejected' ? 'danger' : 'secondary');
+        const statusText = r.status === 'approved' ? 'Confirmed' : (r.status === 'rejected' ? 'Rejected' : 'Pending');
         
         // Screenshot button - construct full URL for image
         const fullImageUrl = r.proofImageUrl ? `${window.location.origin}${r.proofImageUrl}` : '';
-        console.log('Original URL:', r.proofImageUrl, 'Full URL:', fullImageUrl);
         const screenshotBtn = r.proofImageUrl ? 
           `<button class="btn btn-outline-info btn-sm" data-action="view-screenshot" data-url="${fullImageUrl}" data-id="${r._id}">
             <i class="bi bi-image me-1"></i>View
           </button>` : 
           '<span class="text-muted">No image</span>';
+        
+        // Action buttons - only show for pending requests
+        const actionButtons = r.status === 'pending' ? 
+          `<div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-success" data-action="approve" data-id="${r._id}">Accept</button>
+            <button class="btn btn-outline-danger" data-action="reject" data-id="${r._id}">Reject</button>
+          </div>` : 
+          `<span class="badge bg-${statusBadge}">${statusText}</span>`;
         
         // Desktop table row
         const tr = document.createElement('tr');
@@ -190,12 +205,7 @@
           <td>${amount}</td>
           <td>${packageName}</td>
           <td>${screenshotBtn}</td>
-          <td>
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-outline-success" data-action="approve" data-id="${r._id}">Accept</button>
-              <button class="btn btn-outline-danger" data-action="reject" data-id="${r._id}">Reject</button>
-            </div>
-          </td>`;
+          <td>${actionButtons}</td>`;
         tableBody.appendChild(tr);
         
         // Mobile card
@@ -205,7 +215,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <h6 class="card-title mb-0">${packageName}</h6>
-              <span class="badge bg-${statusBadge}">${r.status}</span>
+              <span class="badge bg-${statusBadge}">${statusText}</span>
             </div>
             <p class="card-text">
               <strong>Name:</strong> ${userName}<br>
@@ -216,13 +226,8 @@
               <div>
                 ${screenshotBtn}
               </div>
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-success" data-action="approve" data-id="${r._id}">
-                  <i class="bi bi-check-circle me-1"></i>Accept
-                </button>
-                <button class="btn btn-outline-danger" data-action="reject" data-id="${r._id}">
-                  <i class="bi bi-x-circle me-1"></i>Reject
-                </button>
+              <div>
+                ${actionButtons}
               </div>
             </div>
           </div>`;
@@ -242,7 +247,31 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
-      if (resp.ok) { await loadRequests(); }
+      if (resp.ok) { 
+        // Show success message
+        const successMessage = document.getElementById('successMessage');
+        const successMessageText = document.getElementById('successMessageText');
+        
+        if (status === 'approved') {
+          successMessageText.textContent = 'Payment request approved successfully! Booking has been confirmed.';
+        } else if (status === 'rejected') {
+          successMessageText.textContent = 'Payment request rejected successfully! Booking has been cancelled.';
+        }
+        
+        successMessage.style.display = 'block';
+        successMessage.classList.add('show');
+        
+        // Auto-hide message after 5 seconds
+        setTimeout(() => {
+          successMessage.classList.remove('show');
+          setTimeout(() => {
+            successMessage.style.display = 'none';
+          }, 150);
+        }, 5000);
+        
+        // Reload requests to show updated status
+        await loadRequests(); 
+      }
     }
 
     // Event listener for both desktop table and mobile cards
