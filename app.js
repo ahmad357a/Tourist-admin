@@ -713,6 +713,14 @@ app.get('/api/payment/requests', ensureAuthenticated, async function(req, res){
         const status = req.query.status;
         const filter = status ? { status } : {};
         const requests = await PaymentRequest.find(filter).sort({ createdAt: -1 });
+        console.log('Payment requests found:', requests.length);
+        if (requests.length > 0) {
+            console.log('Sample request with image:', {
+                id: requests[0]._id,
+                proofImageUrl: requests[0].proofImageUrl,
+                hasImage: !!requests[0].proofImageUrl
+            });
+        }
         res.json(requests);
     } catch (e) {
         console.error('Error fetching payment requests:', e);
@@ -1270,6 +1278,24 @@ app.get('/api/bookings', ensureAuthenticated, async function(req, res) {
     } catch (err) {
         console.error('Error fetching bookings:', err);
         res.status(500).json({ error: 'Failed to fetch bookings' });
+    }
+});
+
+// Test endpoint to check image accessibility
+app.get('/api/test-image/:filename', ensureAuthenticated, function(req, res) {
+    const filename = req.params.filename;
+    const imagePath = path.join(__dirname, 'public', 'uploads', filename);
+    
+    console.log('Testing image access:', {
+        filename: filename,
+        imagePath: imagePath,
+        exists: require('fs').existsSync(imagePath)
+    });
+    
+    if (require('fs').existsSync(imagePath)) {
+        res.sendFile(imagePath);
+    } else {
+        res.status(404).json({ error: 'Image not found', path: imagePath });
     }
 });
 

@@ -182,9 +182,20 @@
         const statusText = r.status === 'approved' ? 'Confirmed' : (r.status === 'rejected' ? 'Rejected' : 'Pending');
         
         // Screenshot button - construct full URL for image
-        const fullImageUrl = r.proofImageUrl ? `${window.location.origin}${r.proofImageUrl}` : '';
+        // Try multiple URL construction methods for production compatibility
+        let fullImageUrl = '';
+        if (r.proofImageUrl) {
+          // Method 1: Use current origin
+          fullImageUrl = `${window.location.origin}${r.proofImageUrl}`;
+          
+          // Method 2: If that fails, try using the test endpoint
+          const testUrl = `${window.location.origin}/api/test-image/${r.proofImageUrl.split('/').pop()}`;
+          
+          console.log('Payment request:', r._id, 'Image URL:', r.proofImageUrl, 'Full URL:', fullImageUrl, 'Test URL:', testUrl);
+        }
+        
         const screenshotBtn = r.proofImageUrl ? 
-          `<button class="btn btn-outline-info btn-sm" data-action="view-screenshot" data-url="${fullImageUrl}" data-id="${r._id}">
+          `<button class="btn btn-outline-info btn-sm" data-action="view-screenshot" data-url="${fullImageUrl}" data-test-url="${testUrl}" data-id="${r._id}">
             <i class="bi bi-image me-1"></i>View
           </button>` : 
           '<span class="text-muted">No image</span>';
@@ -285,9 +296,10 @@
       if (action === 'reject') updateRequest(id, 'rejected');
       if (action === 'view-screenshot') {
         const url = btn.getAttribute('data-url');
+        const testUrl = btn.getAttribute('data-test-url');
         if (url) {
           // Show screenshot in modal
-          showScreenshotModal(url);
+          showScreenshotModal(url, testUrl);
         }
       }
     });
@@ -340,18 +352,33 @@
     reloadSettingsBtn.addEventListener('click', loadSettings);
 
     // Screenshot modal functionality
-    function showScreenshotModal(imageUrl) {
+    function showScreenshotModal(imageUrl, testUrl = null) {
       const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
       const screenshotImage = document.getElementById('screenshotImage');
       const downloadBtn = document.getElementById('downloadScreenshot');
       
-      // Set the image source
+      // Set the image source with error handling
       screenshotImage.src = imageUrl;
+      
+      // Add error handling for image loading
+      screenshotImage.onerror = function() {
+        console.log('Primary image failed to load, trying test URL:', testUrl);
+        if (testUrl) {
+          this.src = testUrl;
+        } else {
+          this.alt = 'Image not found';
+          this.style.display = 'none';
+        }
+      };
+      
+      screenshotImage.onload = function() {
+        console.log('Image loaded successfully:', this.src);
+      };
       
       // Set up download functionality
       downloadBtn.onclick = function() {
         const link = document.createElement('a');
-        link.href = imageUrl;
+        link.href = screenshotImage.src;
         link.download = 'payment-screenshot-' + Date.now() + '.jpg';
         document.body.appendChild(link);
         link.click();
