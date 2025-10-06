@@ -71,7 +71,7 @@
         <div class="col-12 col-md-4">
           <label class="form-label">QR Code Image <span class="text-danger">*</span></label>
           <div class="border rounded p-2 text-center">
-            <img id="qrPreview" src="<%= (settings && settings.qrImageUrl) ? settings.qrImageUrl : '' %>" alt="QR" style="max-width:100%;max-height:220px;display:none;">
+            <img id="qrPreview" src="" alt="QR" style="max-width:100%;max-height:220px;display:none;" data-qr-url="<%= (settings && settings.qrImageUrl) ? settings.qrImageUrl : '' %>">
           </div>
           <input type="file" class="form-control mt-2" name="qr" accept="image/*" required>
           <div class="form-text">Upload a QR code image for payments</div>
@@ -149,6 +149,13 @@
     const qrInput = settingsForm.querySelector('input[name="qr"]');
     const qrPreview = document.getElementById('qrPreview');
 
+    // Set initial QR preview image if it exists
+    const qrUrl = qrPreview.getAttribute('data-qr-url');
+    if (qrUrl) {
+      qrPreview.src = `${window.location.origin}${qrUrl}`;
+      qrPreview.style.display = 'block';
+    }
+
     async function loadRequests(){
       const qs = filterStatus.value ? ('?status=' + encodeURIComponent(filterStatus.value)) : '';
       const resp = await fetch('/api/payment/requests' + qs);
@@ -166,9 +173,11 @@
         const packageName = r.tourPackageId ? ('Package #' + r.tourPackageId) : (r.hikingId ? ('Hiking #' + r.hikingId) : '-');
         const statusBadge = r.status === 'approved' ? 'success' : (r.status === 'rejected' ? 'danger' : 'secondary');
         
-        // Screenshot button
-        const screenshotBtn = r.screenshotUrl ? 
-          `<button class="btn btn-outline-info btn-sm" data-action="view-screenshot" data-url="${r.screenshotUrl}" data-id="${r._id}">
+        // Screenshot button - construct full URL for image
+        const fullImageUrl = r.proofImageUrl ? `${window.location.origin}${r.proofImageUrl}` : '';
+        console.log('Original URL:', r.proofImageUrl, 'Full URL:', fullImageUrl);
+        const screenshotBtn = r.proofImageUrl ? 
+          `<button class="btn btn-outline-info btn-sm" data-action="view-screenshot" data-url="${fullImageUrl}" data-id="${r._id}">
             <i class="bi bi-image me-1"></i>View
           </button>` : 
           '<span class="text-muted">No image</span>';
@@ -269,7 +278,7 @@
       settingsForm.swift.value = s.swift || '';
       settingsForm.instructions.value = s.instructions || '';
       if (s.qrImageUrl) {
-        qrPreview.src = s.qrImageUrl;
+        qrPreview.src = `${window.location.origin}${s.qrImageUrl}`;
         qrPreview.style.display = 'block';
       }
     }
@@ -280,7 +289,7 @@
       const resp = await fetch('/api/payment/settings', { method: 'PUT', body: formData });
       if (resp.ok) {
         const s = await resp.json();
-        if (s.qrImageUrl) { qrPreview.src = s.qrImageUrl; qrPreview.style.display = 'block'; }
+        if (s.qrImageUrl) { qrPreview.src = `${window.location.origin}${s.qrImageUrl}`; qrPreview.style.display = 'block'; }
         
         // Show success message
         const successMsg = document.getElementById('successMessage');

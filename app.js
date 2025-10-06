@@ -748,6 +748,7 @@ app.put('/api/payment/settings', ensureAuthenticated, upload.single('qr'), async
         } else if (typeof req.body.qrImageUrl === 'string') {
             update.qrImageUrl = req.body.qrImageUrl;
         }
+        
         const settings = await PaymentSetting.findOneAndUpdate({}, update, { new: true, upsert: true });
         res.json(settings);
     } catch (e) {
@@ -763,6 +764,7 @@ app.get('/api/payment/requests', ensureAuthenticated, async function(req, res){
         const requests = await PaymentRequest.find(filter).sort({ createdAt: -1 });
         res.json(requests);
     } catch (e) {
+        console.error('Error fetching payment requests:', e);
         res.status(500).json({ error: 'Failed to fetch requests' });
     }
 });
