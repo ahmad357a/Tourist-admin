@@ -184,12 +184,13 @@
         // Screenshot button - construct full URL for image
         // Try multiple URL construction methods for production compatibility
         let fullImageUrl = '';
+        let testUrl = '';
         if (r.proofImageUrl) {
           // Method 1: Use current origin
           fullImageUrl = `${window.location.origin}${r.proofImageUrl}`;
           
           // Method 2: If that fails, try using the test endpoint
-          const testUrl = `${window.location.origin}/api/test-image/${r.proofImageUrl.split('/').pop()}`;
+          testUrl = `${window.location.origin}/api/test-image/${r.proofImageUrl.split('/').pop()}`;
           
           console.log('Payment request:', r._id, 'Image URL:', r.proofImageUrl, 'Full URL:', fullImageUrl, 'Test URL:', testUrl);
         }

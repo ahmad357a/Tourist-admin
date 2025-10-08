@@ -714,12 +714,15 @@ app.get('/api/payment/requests', ensureAuthenticated, async function(req, res){
         const filter = status ? { status } : {};
         const requests = await PaymentRequest.find(filter).sort({ createdAt: -1 });
         console.log('Payment requests found:', requests.length);
+        console.log('Database connection:', mongoose.connection.name, 'Host:', mongoose.connection.host, 'Port:', mongoose.connection.port);
         if (requests.length > 0) {
             console.log('Sample request with image:', {
                 id: requests[0]._id,
                 proofImageUrl: requests[0].proofImageUrl,
                 hasImage: !!requests[0].proofImageUrl
             });
+        } else {
+            console.log('No payment requests found in database');
         }
         res.json(requests);
     } catch (e) {
@@ -1296,6 +1299,37 @@ app.get('/api/test-image/:filename', ensureAuthenticated, function(req, res) {
         res.sendFile(imagePath);
     } else {
         res.status(404).json({ error: 'Image not found', path: imagePath });
+    }
+});
+
+// Test endpoint to check payment requests in database
+app.get('/api/test-payment-requests', ensureAuthenticated, async function(req, res) {
+    try {
+        const totalRequests = await PaymentRequest.countDocuments();
+        const pendingRequests = await PaymentRequest.countDocuments({ status: 'pending' });
+        const approvedRequests = await PaymentRequest.countDocuments({ status: 'approved' });
+        const rejectedRequests = await PaymentRequest.countDocuments({ status: 'rejected' });
+        
+        const recentRequests = await PaymentRequest.find().sort({ createdAt: -1 }).limit(5).select('_id userEmail userName amount status createdAt');
+        
+        res.json({
+            database: {
+                name: mongoose.connection.name,
+                host: mongoose.connection.host,
+                port: mongoose.connection.port,
+                readyState: mongoose.connection.readyState
+            },
+            counts: {
+                total: totalRequests,
+                pending: pendingRequests,
+                approved: approvedRequests,
+                rejected: rejectedRequests
+            },
+            recentRequests: recentRequests
+        });
+    } catch (error) {
+        console.error('Error testing payment requests:', error);
+        res.status(500).json({ error: 'Failed to test payment requests', details: error.message });
     }
 });
 
