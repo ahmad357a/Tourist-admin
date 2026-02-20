@@ -63,8 +63,8 @@ const subAdminSchema = new mongoose.Schema({
     }
 });
 
-// Gallery Schema
-const gallerySchema = new mongoose.Schema({
+// Recent Trip Schema
+const recentTripSchema = new mongoose.Schema({
     title: {
         type: String,
         required: true,
@@ -72,29 +72,17 @@ const gallerySchema = new mongoose.Schema({
     },
     description: {
         type: String,
+        required: true,
         trim: true
     },
     imageUrl: {
         type: String,
         required: true
     },
-    tags: [{
-        type: String,
-        trim: true
-    }],
-    category: {
-        type: String,
-        enum: ['tours', 'events', 'featured', 'general'],
-        default: 'general'
-    },
-    featured: {
-        type: Boolean,
-        default: false
-    },
-    uploadedBy: {
+    createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Admin',
-        required: true
+        required: false
     },
     createdAt: {
         type: Date,
@@ -107,7 +95,7 @@ const gallerySchema = new mongoose.Schema({
 });
 
 // Update timestamps on save
-gallerySchema.pre('save', function(next) {
+recentTripSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
@@ -313,13 +301,13 @@ const hikingSchema = new mongoose.Schema({
 });
 
 // Update timestamps on save
-tourPackageSchema.pre('save', function(next) {
+tourPackageSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
 
 // Update timestamps on save
-hikingSchema.pre('save', function(next) {
+hikingSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
@@ -336,7 +324,7 @@ const paymentSettingSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-paymentSettingSchema.pre('save', function(next){
+paymentSettingSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
@@ -360,7 +348,7 @@ const paymentRequestSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-paymentRequestSchema.pre('save', function(next){
+paymentRequestSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
@@ -426,7 +414,7 @@ const bookingSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
 });
 
-bookingSchema.pre('save', function(next) {
+bookingSchema.pre('save', function (next) {
     this.updatedAt = Date.now();
     next();
 });
@@ -539,7 +527,7 @@ userSchema.plugin(findOrCreate);
 // Create models
 const Admin = mongoose.model('Admin', adminSchema);
 const SubAdmin = mongoose.model('SubAdmin', subAdminSchema);
-const Gallery = mongoose.model('Gallery', gallerySchema);
+const RecentTrip = mongoose.model('RecentTrip', recentTripSchema);
 const TourPackage = mongoose.model('TourPackage', tourPackageSchema);
 const Hiking = mongoose.model('Hiking', hikingSchema);
 const Booking = mongoose.model('Booking', bookingSchema);
@@ -553,24 +541,24 @@ const Review = mongoose.model('Review', reviewSchema);
 const PaymentSetting = mongoose.model('PaymentSetting', paymentSettingSchema);
 const PaymentRequest = mongoose.model('PaymentRequest', paymentRequestSchema);
 
-// Create aliases for Tour Package, Gallery, Hiking, andBooking models to match Tourist Website naming
-const TouristGallery = Gallery;
+// Create aliases for Tour Package, RecentTrip, Hiking, andBooking models to match Tourist Website naming
+const TouristRecentTrip = RecentTrip;
 const TouristTourPackage = TourPackage;
 const TouristHiking = Hiking;
 const TouristBooking = Booking;
 
-module.exports = { 
-    Admin, 
-    SubAdmin, 
-    Gallery, 
-    TourPackage, 
-    Hiking, 
+module.exports = {
+    Admin,
+    SubAdmin,
+    RecentTrip,
+    TourPackage,
+    Hiking,
     Booking,
     // Export Tourist Website models with aliases
     User,
     Order,
     Review,
-    TouristGallery,
+    TouristRecentTrip,
     TouristTourPackage,
     TouristHiking,
     TouristBooking,

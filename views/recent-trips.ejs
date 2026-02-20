@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -7,44 +8,215 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    :root{--brand:#0d6efd;--accent:#ff7a59}
-    body{font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; background:#f8f9fb;color:#212529}
-    .sidebar{width:250px;min-height:100vh;background:#fff;border-right:1px solid #e8eaef;padding:22px}
-    .content{padding:24px}
-    
-    .dropzone{border:2px dashed #d6dde8;padding:40px;border-radius:12px;background:#fff;cursor:pointer;transition:all 0.3s ease;text-align:center}
-    .dropzone:hover{border-color:#0d6efd;background:#f8f9ff}
-    .dropzone.dragover{border-color:#0d6efd;background:#f8f9ff;transform:scale(1.02)}
-    .dropzone-icon{font-size:48px;color:#6c757d;margin-bottom:16px}
-    .dropzone-text{font-size:18px;font-weight:500;color:#495057;margin-bottom:8px}
-    .dropzone-subtext{font-size:14px;color:#6c757d}
-    
-    .thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:24px}
-    .thumb-card{background:#fff;border-radius:12px;padding:16px;border:1px solid #eef3fb;transition:all 0.3s ease;position:relative}
-    .thumb-card:hover{box-shadow:0 8px 25px rgba(0,0,0,0.1);transform:translateY(-2px)}
-    .thumb-card img{width:100%;height:200px;object-fit:cover;border-radius:8px;margin-bottom:12px}
-    .thumb-card .title{font-weight:600;font-size:16px;margin-bottom:8px;color:#212529}
-    .thumb-card .description{font-size:14px;color:#6c757d;margin-bottom:12px;line-height:1.4}
-    .thumb-card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-    .thumb-card .tag{font-size:11px;padding:4px 8px;border-radius:12px;background:#f1f5f9;color:#6c757d}
-    .thumb-card .meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#6c757d}
-    .thumb-card .actions{position:absolute;top:12px;right:12px;display:flex;gap:4px;opacity:0;transition:opacity 0.3s ease}
-    .thumb-card:hover .actions{opacity:1}
-    .thumb-card .actions .btn{width:32px;height:32px;padding:0;border-radius:6px;font-size:12px}
-    
-    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
-    .filter-btn{font-size:14px;padding:8px 16px;border-radius:8px;border:1px solid #dee2e6;background:#fff;color:#6c757d;transition:all 0.3s ease}
-    .filter-btn:hover{background:#f8f9fa;border-color:#0d6efd;color:#0d6efd}
-    .filter-btn.active{background:#0d6efd;border-color:#0d6efd;color:#fff}
-    
-    .upload-progress{position:fixed;top:20px;right:20px;z-index:9999;min-width:300px}
-    .progress-item{background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
-    
-    .lightbox-img{width:100%;height:auto;border-radius:8px}
-    
-    @media (max-width:991px){.sidebar{display:none}}
+    :root {
+      --brand: #0d6efd;
+      --accent: #ff7a59
+    }
+
+    body {
+      font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: #f8f9fb;
+      color: #212529
+    }
+
+    .sidebar {
+      width: 250px;
+      min-height: 100vh;
+      background: #fff;
+      border-right: 1px solid #e8eaef;
+      padding: 22px
+    }
+
+    .content {
+      padding: 24px
+    }
+
+    .dropzone {
+      border: 2px dashed #d6dde8;
+      padding: 40px;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center
+    }
+
+    .dropzone:hover {
+      border-color: #0d6efd;
+      background: #f8f9ff
+    }
+
+    .dropzone.dragover {
+      border-color: #0d6efd;
+      background: #f8f9ff;
+      transform: scale(1.02)
+    }
+
+    .dropzone-icon {
+      font-size: 48px;
+      color: #6c757d;
+      margin-bottom: 16px
+    }
+
+    .dropzone-text {
+      font-size: 18px;
+      font-weight: 500;
+      color: #495057;
+      margin-bottom: 8px
+    }
+
+    .dropzone-subtext {
+      font-size: 14px;
+      color: #6c757d
+    }
+
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 24px
+    }
+
+    .thumb-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid #eef3fb;
+      transition: all 0.3s ease;
+      position: relative
+    }
+
+    .thumb-card:hover {
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px)
+    }
+
+    .thumb-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 12px
+    }
+
+    .thumb-card .title {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #212529
+    }
+
+    .thumb-card .description {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 12px;
+      line-height: 1.4
+    }
+
+    .thumb-card .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px
+    }
+
+    .thumb-card .tag {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      background: #f1f5f9;
+      color: #6c757d
+    }
+
+    .thumb-card .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #6c757d
+    }
+
+    .thumb-card .actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.3s ease
+    }
+
+    .thumb-card:hover .actions {
+      opacity: 1
+    }
+
+    .thumb-card .actions .btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 6px;
+      font-size: 12px
+    }
+
+    .filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px
+    }
+
+    .filter-btn {
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+      background: #fff;
+      color: #6c757d;
+      transition: all 0.3s ease
+    }
+
+    .filter-btn:hover {
+      background: #f8f9fa;
+      border-color: #0d6efd;
+      color: #0d6efd
+    }
+
+    .filter-btn.active {
+      background: #0d6efd;
+      border-color: #0d6efd;
+      color: #fff
+    }
+
+    .upload-progress {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      min-width: 300px
+    }
+
+    .progress-item {
+      background: #fff;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15)
+    }
+
+    .lightbox-img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px
+    }
+
+    @media (max-width:991px) {
+      .sidebar {
+        display: none
+      }
+    }
   </style>
 </head>
+
 <body>
   <div class="d-flex">
     <aside class="sidebar d-none d-lg-block">
@@ -57,7 +229,7 @@
         <li><a href="/tour" class="nav-link"><i class="bi bi-box-seam me-2"></i> Tour Packages</a></li>
         <li><a href="/hiking" class="nav-link"><i class="bi bi-tree me-2"></i> Hiking Trails</a></li>
         <li><a href="/users" class="nav-link"><i class="bi bi-people me-2"></i> Users</a></li>
-        <li><a href="/gallery" class="nav-link active"><i class="bi bi-images me-2"></i> Gallery</a></li>
+        <li><a href="/recent-trips" class="nav-link active"><i class="bi bi-images me-2"></i> Recent Trips</a></li>
         <li><a href="/bookings" class="nav-link"><i class="bi bi-calendar-check me-2"></i> Bookings</a></li>
       </ul>
     </aside>
@@ -65,7 +237,7 @@
     <main class="flex-grow-1">
       <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom">
         <div class="container-fluid px-3">
-          <h5 class="mb-0">Gallery</h5>
+          <h5 class="mb-0">Recent Trips</h5>
           <div class="ms-auto d-flex align-items-center">
             <button class="btn btn-outline-primary me-2" id="bulkDeleteBtn" style="display:none">
               <i class="bi bi-trash me-1"></i> Delete Selected
@@ -74,7 +246,8 @@
               <i class="bi bi-download me-1"></i> Export
             </button>
             <div class="dropdown">
-              <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+              <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userMenu"
+                data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="avatar me-2" style="width:36px;height:36px;border-radius:50%;background:#dee2e6"></div>
                 <div class="fw-semibold">Admin</div>
               </a>
@@ -92,21 +265,15 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
               <div>
-                <h6 class="mb-0">Gallery Manager</h6>
-                <small class="text-muted">Upload images for tours and events, add captions and tags.</small>
+                <h6 class="mb-0">Recent Trips Manager</h6>
+                <small class="text-muted">Upload and manage recent trips for the homepage.</small>
               </div>
               <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-primary" id="addImageBtn">
-                  <i class="bi bi-plus-lg me-1"></i>Add Image
+                  <i class="bi bi-plus-lg me-1"></i>Add Trip
                 </button>
-                <input id="searchInput" class="form-control form-control-sm" placeholder="Search by title or description" style="min-width:220px" />
-                <select id="categoryFilter" class="form-select form-select-sm">
-                  <option value="all">All categories</option>
-                  <option value="tours">Tours</option>
-                  <option value="events">Events</option>
-                  <option value="featured">Featured</option>
-                  <option value="general">General</option>
-                </select>
+                <input id="searchInput" class="form-control form-control-sm" placeholder="Search by title..."
+                  style="min-width:220px" />
               </div>
             </div>
 
@@ -123,14 +290,7 @@
             </div>
             <input id="fileInput" type="file" accept="image/*" multiple style="display:none" />
 
-            <!-- Filters -->
-            <div class="filters">
-              <button class="filter-btn active" data-filter="all">All Images</button>
-              <button class="filter-btn" data-filter="featured">Featured</button>
-              <button class="filter-btn" data-filter="tours">Tours</button>
-              <button class="filter-btn" data-filter="events">Events</button>
-              <button class="filter-btn" data-filter="general">General</button>
-            </div>
+
 
             <!-- Gallery Grid -->
             <div id="galleryGrid" class="thumb-grid"></div>
@@ -169,7 +329,7 @@
           <form id="imageForm">
             <input type="hidden" id="imageId" />
             <input type="hidden" id="selectedImageData" />
-            
+
             <!-- Image Selection Section -->
             <div class="mb-4">
               <label class="form-label fw-semibold">Select Image *</label>
@@ -200,38 +360,15 @@
             </div>
 
             <div class="row">
-              <div class="col-md-6">
+              <div class="col-md-12">
                 <div class="mb-3">
-                  <label for="imageTitle" class="form-label">Title *</label>
+                  <label for="imageTitle" class="form-label">Trip Title *</label>
                   <input type="text" class="form-control" id="imageTitle" required>
                 </div>
                 <div class="mb-3">
-                  <label for="imageDescription" class="form-label">Description</label>
-                  <textarea class="form-control" id="imageDescription" rows="3" placeholder="Enter image description..."></textarea>
-                </div>
-                <div class="mb-3">
-                  <label for="imageTags" class="form-label">Tags</label>
-                  <input type="text" class="form-control" id="imageTags" placeholder="Enter tags separated by commas">
-                  <div class="form-text">Example: mountains, nature, adventure</div>
-                </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label for="imageCategory" class="form-label">Category</label>
-                  <select class="form-select" id="imageCategory">
-                    <option value="general">General</option>
-                    <option value="tours">Tours</option>
-                    <option value="events">Events</option>
-                    <option value="featured">Featured</option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="imageFeatured">
-                    <label class="form-check-label" for="imageFeatured">
-                      Mark as featured
-                    </label>
-                  </div>
+                  <label for="imageDescription" class="form-label">Trip Description *</label>
+                  <textarea class="form-control" id="imageDescription" rows="3" placeholder="Enter trip description..."
+                    required></textarea>
                 </div>
                 <div class="mb-3">
                   <label class="form-label">Image Details</label>
@@ -294,14 +431,13 @@
     const fileInput = document.getElementById('fileInput');
     const galleryGrid = document.getElementById('galleryGrid');
     const searchInput = document.getElementById('searchInput');
-    const categoryFilter = document.getElementById('categoryFilter');
     const imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
     const lightboxModal = new bootstrap.Modal(document.getElementById('lightboxModal'));
     const imageForm = document.getElementById('imageForm');
     const uploadProgress = document.getElementById('uploadProgress');
 
     // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       loadGallery();
       setupEventListeners();
     });
@@ -314,24 +450,15 @@
       // Modal dropzone events
       const modalDropzone = document.getElementById('modalDropzone');
       const modalFileInput = document.getElementById('modalFileInput');
-      
+
       modalDropzone.addEventListener('click', () => modalFileInput.click());
       modalDropzone.addEventListener('dragover', handleModalDragOver);
       modalDropzone.addEventListener('dragleave', handleModalDragLeave);
       modalDropzone.addEventListener('drop', handleModalDrop);
       modalFileInput.addEventListener('change', handleModalFileSelect);
 
-      // Search and filters
+      // Search
       searchInput.addEventListener('input', filterGallery);
-      categoryFilter.addEventListener('change', filterGallery);
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentFilter = btn.getAttribute('data-filter');
-          filterGallery();
-        });
-      });
 
       // Form submission
       document.getElementById('saveImageBtn').addEventListener('click', saveImage);
@@ -364,7 +491,7 @@
 
     function handleModalFiles(files) {
       const imageFile = files.find(file => file.type.startsWith('image/'));
-      
+
       if (!imageFile) {
         showAlert('Please select a valid image file', 'warning');
         return;
@@ -379,7 +506,7 @@
           size: imageFile.size,
           type: imageFile.type
         };
-        
+
         showImagePreview(imageData);
         document.getElementById('selectedImageData').value = JSON.stringify(imageData);
       };
@@ -389,10 +516,10 @@
     function showImagePreview(imageData) {
       // Show preview section
       document.getElementById('imagePreviewSection').style.display = 'block';
-      
+
       // Set preview image
       document.getElementById('previewImage').src = imageData.preview;
-      
+
       // Update image details
       const sizeInMB = (imageData.size / (1024 * 1024)).toFixed(2);
       document.getElementById('imageDetails').innerHTML = `
@@ -401,14 +528,14 @@
         <div><strong>Type:</strong> ${imageData.type}</div>
         <div><strong>Dimensions:</strong> <span id="imageDimensions">Loading...</span></div>
       `;
-      
+
       // Get image dimensions
       const img = new Image();
-      img.onload = function() {
+      img.onload = function () {
         document.getElementById('imageDimensions').textContent = `${this.width} × ${this.height} px`;
       };
       img.src = imageData.preview;
-      
+
       // Hide dropzone
       document.getElementById('modalDropzone').style.display = 'none';
     }
@@ -431,36 +558,28 @@
       const imageId = document.getElementById('imageId');
       const imageTitle = document.getElementById('imageTitle');
       const imageDescription = document.getElementById('imageDescription');
-      const imageTags = document.getElementById('imageTags');
-      const imageCategory = document.getElementById('imageCategory');
-      const imageFeatured = document.getElementById('imageFeatured');
       const modalDropzone = document.getElementById('modalDropzone');
       const imagePreviewSection = document.getElementById('imagePreviewSection');
       const imageDetails = document.getElementById('imageDetails');
 
       if (isEdit && imageData) {
-        modalTitle.textContent = 'Edit Image';
+        modalTitle.textContent = 'Edit Trip';
         imageId.value = imageData._id;
         imageTitle.value = imageData.title;
         imageDescription.value = imageData.description || '';
-        imageTags.value = imageData.tags.join(', ');
-        imageCategory.value = imageData.category;
-        imageFeatured.checked = imageData.featured;
-        
+
         // Show existing image
         imagePreviewSection.style.display = 'block';
         document.getElementById('previewImage').src = imageData.imageUrl;
         imageDetails.innerHTML = `
           <div><strong>Current Image:</strong> ${imageData.title}</div>
-          <div><strong>Category:</strong> ${imageData.category}</div>
-          <div><strong>Featured:</strong> ${imageData.featured ? 'Yes' : 'No'}</div>
         `;
         modalDropzone.style.display = 'none';
       } else {
-        modalTitle.textContent = 'Add New Image';
+        modalTitle.textContent = 'Add New Trip';
         imageId.value = '';
         imageForm.reset();
-        
+
         // Reset modal state
         modalDropzone.style.display = 'block';
         imagePreviewSection.style.display = 'none';
@@ -476,10 +595,7 @@
       const imageId = document.getElementById('imageId').value;
       const imageData = {
         title: document.getElementById('imageTitle').value,
-        description: document.getElementById('imageDescription').value,
-        tags: document.getElementById('imageTags').value,
-        category: document.getElementById('imageCategory').value,
-        featured: document.getElementById('imageFeatured').checked
+        description: document.getElementById('imageDescription').value
       };
 
       if (!imageData.title.trim()) {
@@ -490,12 +606,12 @@
       try {
         if (imageId) {
           // Update existing image
-          const response = await fetch(`/api/gallery/${imageId}`, {
+          const response = await fetch(`/api/recent-trips/${imageId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(imageData)
           });
-          
+
           if (response.ok) {
             showAlert('Image updated successfully', 'success');
             imageModal.hide();
@@ -512,8 +628,8 @@
           }
 
           const imageInfo = JSON.parse(selectedImageData);
-          
-          const response = await fetch('/api/gallery', {
+
+          const response = await fetch('/api/recent-trips', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -540,7 +656,7 @@
     async function loadGallery() {
       try {
         showLoading(true);
-        const response = await fetch('/api/gallery');
+        const response = await fetch('/api/recent-trips');
         if (response.ok) {
           gallery = await response.json();
           renderGallery();
@@ -558,7 +674,7 @@
     // Render Gallery
     function renderGallery() {
       const filteredGallery = filterGalleryItems(gallery, currentFilter, searchInput.value);
-      
+
       if (filteredGallery.length === 0) {
         galleryGrid.style.display = 'none';
         document.getElementById('emptyState').style.display = 'block';
@@ -584,11 +700,7 @@
           <img src="${item.imageUrl}" alt="${item.title}" onclick="viewImage('${item._id}')" style="cursor:pointer">
           <div class="title">${item.title}</div>
           <div class="description">${item.description || 'No description'}</div>
-          <div class="tags">
-            ${item.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-          </div>
           <div class="meta">
-            <span>${item.category}</span>
             <span>${new Date(item.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
@@ -603,18 +715,12 @@
     function filterGalleryItems(items, filter, search) {
       let filtered = items;
 
-      // Apply category filter
-      if (filter !== 'all') {
-        filtered = filtered.filter(item => item.category === filter);
-      }
-
       // Apply search filter
       if (search) {
         const searchLower = search.toLowerCase();
-        filtered = filtered.filter(item => 
+        filtered = filtered.filter(item =>
           item.title.toLowerCase().includes(searchLower) ||
-          item.description.toLowerCase().includes(searchLower) ||
-          item.tags.some(tag => tag.toLowerCase().includes(searchLower))
+          (item.description && item.description.toLowerCase().includes(searchLower))
         );
       }
 
@@ -630,8 +736,8 @@
       document.getElementById('lbImage').src = item.imageUrl;
       document.getElementById('lbTitle').textContent = item.title;
       document.getElementById('lbDescription').textContent = item.description || 'No description';
-      document.getElementById('lbTags').textContent = item.tags.join(', ') || 'No tags';
-      
+      document.getElementById('lbTags').textContent = '';
+
       lightboxModal.show();
     }
 
@@ -653,7 +759,7 @@
       if (!confirm('Are you sure you want to delete this image?')) return;
 
       try {
-        const response = await fetch(`/api/gallery/${id}`, {
+        const response = await fetch(`/api/recent-trips/${id}`, {
           method: 'DELETE'
         });
 
@@ -691,11 +797,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       `;
       document.body.appendChild(alertDiv);
-      
+
       setTimeout(() => {
         alertDiv.remove();
       }, 3000);
     }
   </script>
 </body>
+
 </html>
